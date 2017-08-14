@@ -30,7 +30,7 @@ func (bot *bot) makeURL(m method) string {
 
 // Bot ...
 type Bot interface {
-	SendMessage(int64, string) error
+	SendMessage(int64, string, bool) error
 	Listen() <-chan *Update
 }
 
@@ -45,11 +45,16 @@ func NewBot(t string) Bot {
 }
 
 // SendMessage ...
-func (bot *bot) SendMessage(chatID int64, text string) error {
-	jsonStr := fmt.Sprintf(`{"chat_id":"%d","text":"%s"}`, chatID, text)
-	json := []byte(jsonStr)
+func (bot *bot) SendMessage(chatID int64, text string, disableWebPagePreview bool) error {
+	sendMessageReq := sendMessageReq{ChatID: chatID, Text: text, DisableWebPagePreview: disableWebPagePreview}
+	jsonReq, err := json.Marshal(sendMessageReq)
+	log.Printf("message to send: %s\n", jsonReq)
+	if err != nil {
+		log.Printf("[Error] SendMessage: can not marshal json request: %s\n", err)
+		return err
+	}
 	endPnt := bot.makeURL(sendMessageMthd)
-	req, err := http.NewRequest(http.MethodPost, endPnt, bytes.NewBuffer(json))
+	req, err := http.NewRequest(http.MethodPost, endPnt, bytes.NewBuffer(jsonReq))
 	if err != nil {
 		log.Printf("[Error] in build req: %s", err.Error())
 		return err
@@ -64,7 +69,7 @@ func (bot *bot) SendMessage(chatID int64, text string) error {
 	defer resp.Body.Close()
 	_, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("[Warning] can not read api answer: {method: %s, data:%s}, err: %s", sendMessageMthd, json, err)
+		log.Printf("[Warning] can not read api answer: {method: %s, data:%s}, err: %s", sendMessageMthd, jsonReq, err)
 	}
 	return nil
 }

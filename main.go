@@ -83,7 +83,7 @@ func doStrart(update *teleapi.Update) {
 	Usage:
 	share url for read later
 	/l list urls in pocket`)
-	bot.SendMessage(update.Message.Chat.ID, msg)
+	bot.SendMessage(update.Message.Chat.ID, msg, false)
 }
 
 func doList(update *teleapi.Update) {
@@ -97,7 +97,7 @@ func doList(update *teleapi.Update) {
 	for _, memo := range u.Memos {
 		msg = msg + memo + "\n"
 	}
-	bot.SendMessage(update.Message.Chat.ID, msg)
+	bot.SendMessage(update.Message.Chat.ID, msg, true)
 }
 
 func doFeed(update *teleapi.Update) {
@@ -105,5 +105,5 @@ func doFeed(update *teleapi.Update) {
 	userID := update.Message.From.ID
 	botStore.SaveMemo(userID, feed)
 	msg := "ok, i'll show it later"
-	bot.SendMessage(update.Message.Chat.ID, msg)
+	bot.SendMessage(update.Message.Chat.ID, msg, false)
 }
