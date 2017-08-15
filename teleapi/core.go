@@ -97,6 +97,10 @@ func doUpdates(bot *bot) {
 			continue
 		}
 		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			log.Printf("[Warning] http status != 200, statusCode: %d\n", resp.StatusCode)
+			continue
+		}
 		respBlob, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
 			log.Printf("[Warning] can not read api answer: {method: %s, data:%s}, err: %s\n", getUpdates, jsonBlob, err)
@@ -111,7 +115,6 @@ func doUpdates(bot *bot) {
 		if !result.Ok {
 			log.Printf("[Warning] result not ok\n")
 			log.Printf("[Data] json is: %+v\n", result)
-			continue
 		}
 		for _, update := range result.Result {
 			bot.updateCh <- update

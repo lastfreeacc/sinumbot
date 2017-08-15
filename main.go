@@ -93,9 +93,11 @@ func doList(update *teleapi.Update) {
 		log.Printf("[Warn] some trobles in doList, err: %s\n", err)
 		return
 	}
-	msg := "ur memos is: \n"
+	msg := `ur memos is:
+	-------
+	`
 	for _, memo := range u.Memos {
-		msg = msg + memo + "\n"
+		msg = msg + memo + "\n-------\n" 
 	}
 	bot.SendMessage(update.Message.Chat.ID, msg, true)
 }
