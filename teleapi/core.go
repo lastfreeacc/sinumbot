@@ -21,7 +21,6 @@ const (
 type bot struct {
 	token        string
 	updateCh     chan *Update
-	currenOffset int64
 }
 
 func (bot *bot) makeURL(m method) string {
@@ -36,11 +35,7 @@ type Bot interface {
 
 // NewBot ...
 func NewBot(t string) Bot {
-	bot := bot{
-		token:        t,
-		updateCh:     make(chan *Update, 100),
-		currenOffset: 0,
-	}
+	bot := bot{token: t}
 	return &bot
 }
 
@@ -75,14 +70,16 @@ func (bot *bot) SendMessage(chatID int64, text string, disableWebPagePreview boo
 }
 
 func (bot *bot) Listen() <-chan *Update {
-	go doUpdates(bot)
-	return bot.updateCh
+	updateCh := make(chan *Update, 100)
+	go doUpdates(bot, updateCh)
+	return updateCh
 }
 
-func doUpdates(bot *bot) {
+func doUpdates(bot *bot, updateCh chan<- *Update) {
 	endPnt := bot.makeURL(getUpdates)
+	var currenOffset int64
 	for {
-		jsonStr := fmt.Sprintf(`{"offset":%d, "timeout": 60}`, bot.currenOffset+1)
+		jsonStr := fmt.Sprintf(`{"offset":%d, "timeout": 60}`, currenOffset+1)
 		jsonBlob := []byte(jsonStr)
 		req, err := http.NewRequest(http.MethodPost, endPnt, bytes.NewBuffer(jsonBlob))
 		if err != nil {
@@ -117,9 +114,9 @@ func doUpdates(bot *bot) {
 			log.Printf("[Data] json is: %+v\n", result)
 		}
 		for _, update := range result.Result {
-			bot.updateCh <- update
-			if update.UpdateID > bot.currenOffset {
-				bot.currenOffset = update.UpdateID
+			updateCh <- update
+			if update.UpdateID > currenOffset {
+				currenOffset = update.UpdateID
 			}
 		}
 
