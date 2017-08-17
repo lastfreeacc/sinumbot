@@ -38,11 +38,12 @@ func (bs *boltStrore) GetUser(userID int64) (*User, error) {
 }
 
 // SaveMemo ...
-func (bs *boltStrore) SaveMemo(userID int64, memo string) error {
+func (bs *boltStrore) SaveMemo(userID int64, memo *Memo) error {
+
 	u, err := bs.GetUser(userID)
 	if err != nil {
 		log.Printf("[Info] can not get user with id: %d, err: %s\n", userID, err)
-		ms := make([]string, 0, 10)
+		ms := make([]*Memo, 0, 10)
 		u = &User{ID: userID, Memos: ms}
 	}
 	u.Memos = append(u.Memos, memo)

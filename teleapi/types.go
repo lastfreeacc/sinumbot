@@ -13,6 +13,7 @@ type Message struct {
 	Date      int64  `json:"date"`
 	Chat      Chat   `json:"chat"`
 	Text      string `json:"text"`
+	Entities []Entity `json:"entities"`
 }
 
 // User ...
@@ -31,6 +32,48 @@ type Chat struct {
 	Username  string `json:"username"`
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
+}
+
+// EntityType ...
+type EntityType int
+func (e EntityType) String() string {
+	return entities[e]
+}
+var entities = [...]string{
+	"mention",
+	"hashtag",
+	"bot_command",
+	"url",
+	"email",
+	"bold",
+	"italic",
+	"code",
+	"pre",
+	"text_link",
+	"text_mention",
+}
+
+// ...
+const (
+	MentionEntity EntityType = iota
+	HashtagEntity
+	BotCommandEntity
+	URLEntity
+	EmailEntity
+	BoldEntity
+	ItalicEntity
+	CodeEntity
+	PreEntity
+	TextLinkEntity
+	TextMentionEntity
+)
+// Entity ...
+type Entity struct {
+	Type string `json:"type"`
+	Offset int `json:"offset"`
+	Length int `json:"length"`
+	URL string `json:"url"`
+	User User `json:"user"`
 }
 
 type getUpdatesResp struct {

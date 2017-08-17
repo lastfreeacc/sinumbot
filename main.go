@@ -97,15 +97,18 @@ func doList(update *teleapi.Update) {
 	-------
 	`
 	for _, memo := range u.Memos {
-		msg = msg + memo + "\n-------\n" 
+		msg = msg + memo.Entry + "\n-------\n" 
 	}
 	bot.SendMessage(update.Message.Chat.ID, msg, true)
 }
 
 func doFeed(update *teleapi.Update) {
-	feed := update.Message.Text
-	userID := update.Message.From.ID
-	botStore.SaveMemo(userID, feed)
+	// feed := update.Message.Text
+	// userID := update.Message.From.ID
+	// botStore.SaveMemo(userID, feed)
 	msg := "ok, i'll show it later"
 	bot.SendMessage(update.Message.Chat.ID, msg, false)
+
+	tags := teleapi.TagsFromMessage(&update.Message)
+	log.Printf("%v\n", tags)
 }
