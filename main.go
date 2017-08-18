@@ -13,9 +13,10 @@ import (
 type cmd string
 
 const (
-	confFilename     = "sinumbot.conf.json"
-	startCmd     cmd = "/start"
-	listCmd       cmd = "/l"
+	confFilename = "sinumbot.conf.json"
+	startCmd     	cmd = "/start"
+	listCmd			cmd = "/l"
+	tagCmd 			cmd = "/t"
 )
 
 func (c cmd) isMe(msg string) bool {
@@ -48,6 +49,8 @@ func main() {
 			doStrart(update)
 		case listCmd.isMe(cmd):
 			doList(update)
+		case tagCmd.isMe(cmd):
+			doTag(update)
 		default:
 			doFeed(update)
 		}
@@ -97,18 +100,23 @@ func doList(update *teleapi.Update) {
 	-------
 	`
 	for _, memo := range u.Memos {
-		msg = msg + memo.Entry + "\n-------\n" 
+		msg = msg + memo.Feed + "\n-------\n" 
 	}
 	bot.SendMessage(update.Message.Chat.ID, msg, true)
 }
 
 func doFeed(update *teleapi.Update) {
-	// feed := update.Message.Text
-	// userID := update.Message.From.ID
-	// botStore.SaveMemo(userID, feed)
+	feed := update.Message.Text
+	userID := update.Message.From.ID
+	tags := teleapi.TagsFromMessage(update.Message)
+	memo := store.NewMemo(feed, tags)
+	botStore.SaveMemo(userID, &memo)
 	msg := "ok, i'll show it later"
 	bot.SendMessage(update.Message.Chat.ID, msg, false)
+}
 
-	tags := teleapi.TagsFromMessage(&update.Message)
-	log.Printf("%v\n", tags)
+func doTag(update *teleapi.Update) {
+	tags := strings.Split(update.Message.Text, " ")
+	tags = tags[1:]
+	log.Printf("[Info] tags: %+v\n", tags)
 }

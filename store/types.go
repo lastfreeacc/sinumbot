@@ -8,7 +8,7 @@ type User struct {
 
 // Memo ...
 type Memo struct {
-	Entry string
+	Feed string
 	Preview string
 	Tags []string
 }
