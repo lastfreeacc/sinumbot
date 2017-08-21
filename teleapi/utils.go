@@ -7,8 +7,8 @@ func TagsFromMessage(message Message) []string {
 		if e.Type != "hashtag" {
 			continue
 		}
-		f := e.Offset
-		l := e.Offset + e.Length
+		f := e.Offset + 1
+		l := e.Offset + e.Length + 1
 		tag := message.Text[f:l]
 		tags = append(tags, tag)
 	}

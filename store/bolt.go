@@ -39,7 +39,6 @@ func (bs *boltStrore) GetUser(userID int64) (*User, error) {
 
 // SaveMemo ...
 func (bs *boltStrore) SaveMemo(userID int64, memo *Memo) error {
-
 	u, err := bs.GetUser(userID)
 	if err != nil {
 		log.Printf("[Info] can not get user with id: %d, err: %s\n", userID, err)

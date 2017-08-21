@@ -94,12 +94,15 @@ func doList(update *teleapi.Update) {
 	u, err := botStore.GetUser(userID)
 	if err != nil {
 		log.Printf("[Warn] some trobles in doList, err: %s\n", err)
+		bot.SendMessage(update.Message.Chat.ID, "Sorry, we have some troubles!", false)
 		return
 	}
+	
 	msg := `ur memos is:
 	-------
 	`
 	for _, memo := range u.Memos {
+		log.Printf("[Info] memo is: %+v\n", *memo)
 		msg = msg + memo.Feed + "\n-------\n" 
 	}
 	bot.SendMessage(update.Message.Chat.ID, msg, true)
@@ -109,7 +112,9 @@ func doFeed(update *teleapi.Update) {
 	feed := update.Message.Text
 	userID := update.Message.From.ID
 	tags := teleapi.TagsFromMessage(update.Message)
+	log.Printf("[Info] tags is: %+v\n", tags)
 	memo := store.NewMemo(feed, tags)
+	log.Printf("[Info] memo for save: %+v\n", memo)
 	botStore.SaveMemo(userID, &memo)
 	msg := "ok, i'll show it later"
 	bot.SendMessage(update.Message.Chat.ID, msg, false)
@@ -118,5 +123,54 @@ func doFeed(update *teleapi.Update) {
 func doTag(update *teleapi.Update) {
 	tags := strings.Split(update.Message.Text, " ")
 	tags = tags[1:]
+	log.Printf("[Info] tag cmd arguments: %+v\n", tags)
+	for i, tag := range tags {
+		if !strings.HasPrefix(tag, "#") {
+			tags[i] = "#" + tag
+		}
+	}
 	log.Printf("[Info] tags: %+v\n", tags)
+	userID := update.Message.From.ID
+	u, err := botStore.GetUser(userID)
+	if err != nil {
+		log.Printf("[Warn] some trobles in doTag, err: %s\n", err)
+		bot.SendMessage(update.Message.Chat.ID, "Sorry, we have some troubles!", false)
+		return
+	}
+	taggedMemos := containsAllTags(u.Memos, tags)
+	msg := `ur memos tagged :
+	-------
+	`
+	for _, memo := range taggedMemos {
+		msg = msg + memo.Feed + "\n-------\n" 
+	}
+	bot.SendMessage(update.Message.Chat.ID, msg, true)
+}
+
+func containsAllTags(memos []*store.Memo, tags []string) []*store.Memo{
+	res := make([]*store.Memo, 0, len(memos))
+	for _, memo := range memos {
+		if containsAll(memo.Tags, tags) {
+			res = append(res, memo)
+		}
+	}
+	return res
+}
+
+func containsAll(srcSl, testSl []string) bool {
+	for _, test := range testSl {
+		if !contains(srcSl, test) {
+			return false
+		}
+	}
+	return true
+}
+
+func contains(srcSl []string, e string) bool {
+	for _, src := range srcSl {
+		if src == e {
+			return true
+		}
+	}
+	return false
 }
