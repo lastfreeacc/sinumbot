@@ -85,7 +85,8 @@ func doStrart(update *teleapi.Update) {
 	feed me ur urls, i'll show them later
 	Usage:
 	share url for read later
-	/l list urls in pocket`)
+	/l - list urls in pocket
+	/t <>`)
 	bot.SendMessage(update.Message.Chat.ID, msg, false)
 }
 
@@ -112,18 +113,15 @@ func doFeed(update *teleapi.Update) {
 	feed := update.Message.Text
 	userID := update.Message.From.ID
 	tags := teleapi.TagsFromMessage(update.Message)
-	log.Printf("[Info] tags is: %+v\n", tags)
 	memo := store.NewMemo(feed, tags)
-	log.Printf("[Info] memo for save: %+v\n", memo)
 	botStore.SaveMemo(userID, &memo)
 	msg := "ok, i'll show it later"
 	bot.SendMessage(update.Message.Chat.ID, msg, false)
 }
 
 func doTag(update *teleapi.Update) {
-	tags := strings.Split(update.Message.Text, " ")
+	tags := strings.Fields(update.Message.Text)
 	tags = tags[1:]
-	log.Printf("[Info] tag cmd arguments: %+v\n", tags)
 	for i, tag := range tags {
 		if !strings.HasPrefix(tag, "#") {
 			tags[i] = "#" + tag
