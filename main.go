@@ -31,15 +31,6 @@ var (
 )
 
 func main() {
-
-	// inline test for bolt storage
-	// botStore := store.NewBoltStore()
-	// botStore.SaveMemo(123, "memo1")
-	// botStore.SaveMemo(123, "memo2")
-	// u, _ := botStore.GetUser(123)
-	// log.Printf("%v", u)
-	// ...
-
 	myInit()
 	upCh := bot.Listen()
 	for update := range upCh {
@@ -65,7 +56,6 @@ func myInit() {
 		log.Fatalf("[Error] can not find botToken in config file: %s\n", confFilename)
 	}
 	bot = teleapi.NewBot(botToken.(string))
-
 }
 
 func readMapFromJSON(filename string, mapVar *map[string]interface{}) {
@@ -86,7 +76,7 @@ func doStrart(update *teleapi.Update) {
 	Usage:
 	share url for read later
 	/l - list urls in pocket
-	/t <>`)
+	/t <tag1> <tagN> - search urls by tags`)
 	bot.SendMessage(update.Message.Chat.ID, msg, false)
 }
 
