@@ -19,8 +19,7 @@ const (
 
 // TODO: move channel from bot stuct... bot can have more than one update subscriptions for different message types
 type bot struct {
-	token        string
-	updateCh     chan *Update
+	token string
 }
 
 func (bot *bot) makeURL(m method) string {
@@ -29,7 +28,7 @@ func (bot *bot) makeURL(m method) string {
 
 // Bot ...
 type Bot interface {
-	SendMessage(int64, string, bool) error
+	SendMessage(SendMessageReq) error
 	Listen() <-chan *Update
 }
 
@@ -40,8 +39,9 @@ func NewBot(t string) Bot {
 }
 
 // SendMessage ...
-func (bot *bot) SendMessage(chatID int64, text string, disableWebPagePreview bool) error {
-	sendMessageReq := sendMessageReq{ChatID: chatID, Text: text, DisableWebPagePreview: disableWebPagePreview}
+// func (bot *bot) SendMessage(chatID int64, text string, disableWebPagePreview bool) error {
+func (bot *bot) SendMessage(sendMessageReq SendMessageReq) error {
+	// sendMessageReq := sendMessageReq{ChatID: chatID, Text: text, DisableWebPagePreview: disableWebPagePreview}
 	jsonReq, err := json.Marshal(sendMessageReq)
 	log.Printf("message to send: %s\n", jsonReq)
 	if err != nil {
@@ -102,6 +102,7 @@ func doUpdates(bot *bot, updateCh chan<- *Update) {
 		if err != nil {
 			log.Printf("[Warning] can not read api answer: {method: %s, data:%s}, err: %s\n", getUpdates, jsonBlob, err)
 		}
+		log.Printf("[Debug] update data is: %s\n", respBlob)
 		var result getUpdatesResp
 		err = json.Unmarshal(respBlob, &result)
 		if err != nil {

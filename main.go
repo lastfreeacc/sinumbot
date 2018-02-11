@@ -1,11 +1,12 @@
 package main
 
 import (
-	"log"
-	"fmt"
-	"strings"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"strings"
+
 	"github.com/lastfreeacc/sinumbot/store"
 	"github.com/lastfreeacc/sinumbot/teleapi"
 )
@@ -13,10 +14,11 @@ import (
 type cmd string
 
 const (
-	confFilename = "sinumbot.conf.json"
-	startCmd     	cmd = "/start"
-	listCmd			cmd = "/l"
-	tagCmd 			cmd = "/t"
+	confFilename     = "sinumbot.conf.json"
+	startCmd     cmd = "/start"
+	listCmd      cmd = "/l"
+	tagCmd       cmd = "/t"
+	buttonCmd    cmd = "/b"
 )
 
 func (c cmd) isMe(msg string) bool {
@@ -42,6 +44,8 @@ func main() {
 			doList(update)
 		case tagCmd.isMe(cmd):
 			doTag(update)
+		case buttonCmd.isMe(cmd):
+			doButton(update)
 		default:
 			doFeed(update)
 		}
@@ -69,6 +73,34 @@ func readMapFromJSON(filename string, mapVar *map[string]interface{}) {
 	log.Printf("[Info] read data from file: %s:\n%v\n", filename, mapVar)
 }
 
+func doButton(update *teleapi.Update) {
+	log.Println("[Debug]")
+	b1 := teleapi.InlineKeyboardButton{
+		Text:         "test",
+		CallbackData: "testdata1",
+	}
+	b2 := teleapi.InlineKeyboardButton{
+		Text:         "test 2",
+		CallbackData: "testdata2",
+	}
+	ks := [][]teleapi.InlineKeyboardButton{{b1, b2}}
+	// k := make([][]teleapi.KeyboardButton, 0)
+	// tmp := make([]teleapi.KeyboardButton, 0)
+	// tmp = append(tmp, b1)
+	// tmp = append(tmp, b2)
+	// k = append(k, tmp)
+	rm := &teleapi.InlineKeyboardMarkup{
+		InlineKeyboard: ks,
+	}
+	req := teleapi.SendMessageReq{
+		ChatID:      update.Message.Chat.ID,
+		Text:        "one two",
+		ReplyMarkup: rm,
+	}
+	bot.SendMessage(req)
+	log.Println("[Debug] successfully sent")
+}
+
 func doStrart(update *teleapi.Update) {
 	msg := fmt.Sprint(
 		`Hello, i am ur pocket!
@@ -77,7 +109,7 @@ func doStrart(update *teleapi.Update) {
 	share url for read later
 	/l - list urls in pocket
 	/t <tag1> <tagN> - search urls by tags`)
-	bot.SendMessage(update.Message.Chat.ID, msg, false)
+	bot.SendMessage(teleapi.SendMessageReq{ChatID: update.Message.Chat.ID, Text: msg})
 }
 
 func doList(update *teleapi.Update) {
@@ -85,18 +117,19 @@ func doList(update *teleapi.Update) {
 	u, err := botStore.GetUser(userID)
 	if err != nil {
 		log.Printf("[Warn] some trobles in doList, err: %s\n", err)
-		bot.SendMessage(update.Message.Chat.ID, "Sorry, we have some troubles!", false)
+		msg := "Sorry, we have some troubles!"
+		bot.SendMessage(teleapi.SendMessageReq{ChatID: update.Message.Chat.ID, Text: msg})
 		return
 	}
-	
+
 	msg := `ur memos is:
 	-------
 	`
 	for _, memo := range u.Memos {
 		log.Printf("[Info] memo is: %+v\n", *memo)
-		msg = msg + memo.Feed + "\n-------\n" 
+		msg = msg + memo.Feed + "\n-------\n"
 	}
-	bot.SendMessage(update.Message.Chat.ID, msg, true)
+	bot.SendMessage(teleapi.SendMessageReq{ChatID: update.Message.Chat.ID, Text: msg})
 }
 
 func doFeed(update *teleapi.Update) {
@@ -106,7 +139,7 @@ func doFeed(update *teleapi.Update) {
 	memo := store.NewMemo(feed, tags)
 	botStore.SaveMemo(userID, &memo)
 	msg := "ok, i'll show it later"
-	bot.SendMessage(update.Message.Chat.ID, msg, false)
+	bot.SendMessage(teleapi.SendMessageReq{ChatID: update.Message.Chat.ID, Text: msg})
 }
 
 func doTag(update *teleapi.Update) {
@@ -122,7 +155,9 @@ func doTag(update *teleapi.Update) {
 	u, err := botStore.GetUser(userID)
 	if err != nil {
 		log.Printf("[Warn] some trobles in doTag, err: %s\n", err)
-		bot.SendMessage(update.Message.Chat.ID, "Sorry, we have some troubles!", false)
+
+		msg := "Sorry, we have some troubles!"
+		bot.SendMessage(teleapi.SendMessageReq{ChatID: update.Message.Chat.ID, Text: msg})
 		return
 	}
 	taggedMemos := containsAllTags(u.Memos, tags)
@@ -130,12 +165,12 @@ func doTag(update *teleapi.Update) {
 	-------
 	`
 	for _, memo := range taggedMemos {
-		msg = msg + memo.Feed + "\n-------\n" 
+		msg = msg + memo.Feed + "\n-------\n"
 	}
-	bot.SendMessage(update.Message.Chat.ID, msg, true)
+	bot.SendMessage(teleapi.SendMessageReq{ChatID: update.Message.Chat.ID, Text: msg})
 }
 
-func containsAllTags(memos []*store.Memo, tags []string) []*store.Memo{
+func containsAllTags(memos []*store.Memo, tags []string) []*store.Memo {
 	res := make([]*store.Memo, 0, len(memos))
 	for _, memo := range memos {
 		if containsAll(memo.Tags, tags) {
